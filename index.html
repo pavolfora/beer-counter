@@ -5,111 +5,469 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Beer Counter 🍺</title>
   <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #0b1020;
+      --bg-2: #121a33;
+      --panel: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 195, 0, 0.22);
+      --text: #f5f7ff;
+      --muted: #aab1c7;
+      --accent: #ffb703;
+      --accent-2: #fb8500;
+    }
     * { box-sizing: border-box; }
     body {
-      margin: 0; min-height: 100vh;
+      margin: 0;
+      min-height: 100vh;
       font-family: system-ui, sans-serif;
-      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      color: #fff; padding: 20px;
+      background:
+        radial-gradient(circle at top left, rgba(255, 183, 3, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(251, 133, 0, 0.12), transparent 28%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      color: var(--text);
+      padding: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
-    .container { text-align: center; max-width: 400px; width: 100%; }
-    h1 { font-size: 2.5rem; margin-bottom: 1rem; text-shadow: 0 4px 20px rgba(255,165,0,0.5); }
-    .counter {
-      background: rgba(255,255,255,0.05);
-      border: 2px solid rgba(255,165,0,0.3);
-      border-radius: 24px;
-      padding: 3rem 2rem;
-      margin-bottom: 2rem;
-      backdrop-filter: blur(10px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.1);
+    .container { width: min(100%, 860px); }
+    .hero { text-align: center; margin-bottom: 20px; }
+    h1 {
+      margin: 0;
+      font-size: clamp(2rem, 5vw, 3.5rem);
+      letter-spacing: 0.02em;
+      text-shadow: 0 8px 30px rgba(255, 183, 3, 0.2);
     }
-    .count { font-size: 7rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; color: #ffa500; text-shadow: 0 0 30px rgba(255,165,0,0.6), 0 4px 20px rgba(0,0,0,0.5); transition: transform 0.1s ease; }
-    .count.bump { transform: scale(1.1); }
-    .label { font-size: 1.2rem; color: #aaa; margin-top: 0.5rem; text-transform: uppercase; letter-spacing: 2px; }
-    .btn-group { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; }
-    button {
-      border: none; border-radius: 16px; padding: 1rem 2rem; font-size: 1.1rem; font-weight: 600;
-      cursor: pointer; transition: all 0.15s ease; min-width: 140px;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.3);
+    .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 0.98rem; }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
     }
-    button:active { transform: scale(0.95); }
-    .btn-add { background: linear-gradient(135deg, #ff8c00, #ff6b00); color: #1a1a2e; }
-    .btn-add:hover { box-shadow: 0 6px 24px rgba(255,140,0,0.5); }
-    .btn-sub { background: linear-gradient(135deg, #4a4a6a, #3a3a5a); color: #fff; }
-    .btn-sub:hover { box-shadow: 0 6px 24px rgba(74,74,106,0.5); }
-    .btn-reset { background: linear-gradient(135deg, #6a3a3a, #5a2a2a); color: #ffaaaa; }
-    .btn-reset:hover { box-shadow: 0 6px 24px rgba(106,58,58,0.5); }
-    .stats { display: flex; justify-content: space-around; margin-top: 2rem; gap: 1rem; flex-wrap: wrap; }
-    .stat { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,165,0,0.2); border-radius: 16px; padding: 1rem 1.5rem; min-width: 100px; }
-    .stat-value { font-size: 1.5rem; font-weight: 700; color: #ffa500; }
-    .stat-label { font-size: 0.8rem; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+    .summary-card, .beer-row, .actions {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+    }
+    .summary-card { padding: 18px; text-align: center; }
+    .summary-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .summary-value {
+      margin-top: 8px;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .beer-list { display: grid; gap: 14px; margin-bottom: 18px; }
+    .beer-row { padding: 18px; }
+    .row-top {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .beer-heading {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+    .beer-name { font-size: 1.25rem; font-weight: 800; }
+    .beer-meta { color: var(--muted); font-size: 0.92rem; margin-top: 4px; }
+    .beer-price {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0.45rem 0.75rem;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.06);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+    .beer-price input {
+      width: 72px;
+      border: none;
+      outline: none;
+      background: transparent;
+      color: var(--text);
+      font: inherit;
+      text-align: right;
+    }
+    .beer-price .currency {
+      color: var(--accent);
+      font-weight: 700;
+    }
+    .row-controls {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+    .icon-button, .action-button {
+      border: none;
+      cursor: pointer;
+      border-radius: 16px;
+      font-weight: 800;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .icon-button {
+      width: 48px;
+      height: 48px;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+      color: var(--text);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+    .action-button {
+      min-width: 150px;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+    .icon-button:hover, .action-button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .icon-button:active, .action-button:active { transform: scale(0.96); }
+    .btn-add { background: linear-gradient(135deg, var(--accent), var(--accent-2)); color: #1b1400; }
+    .btn-sub { background: linear-gradient(135deg, #3a4360, #29314a); color: var(--text); }
+    .btn-reset { background: linear-gradient(135deg, #642d2d, #4d2020); color: #ffd1d1; }
+    .row-count { min-width: 84px; text-align: center; }
+    .row-count strong {
+      display: block;
+      font-size: 1.9rem;
+      font-variant-numeric: tabular-nums;
+      color: var(--accent);
+      line-height: 1;
+    }
+    .row-count span {
+      color: var(--muted);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .price-inputs { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 16px; }
+    .field { flex: 1 1 180px; display: grid; gap: 6px; }
+    .field label { color: var(--muted); font-size: 0.85rem; }
+    .field input {
+      width: 100%;
+      padding: 0.9rem 1rem;
+      border-radius: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: rgba(5, 10, 22, 0.55);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: rgba(255, 183, 3, 0.55);
+      box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.12);
+    }
+    .icon-row {
+      margin-top: 16px;
+      padding: 14px;
+      border-radius: 18px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      min-height: 66px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      align-items: center;
+    }
+    .beer-icon { font-size: 1.2rem; line-height: 1; filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.2)); }
+    .row-total {
+      margin-top: 14px;
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      flex-wrap: wrap;
+      color: var(--muted);
+      font-size: 0.95rem;
+    }
+    .row-total strong { color: var(--text); font-size: 1.05rem; }
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 16px;
+    }
+    @media (max-width: 760px) {
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .row-top { align-items: flex-start; }
+      .row-controls { justify-content: flex-start; }
+    }
     @media (max-width: 480px) {
-      .count { font-size: 5rem; }
-      h1 { font-size: 2rem; }
-      button { min-width: 110px; padding: 0.8rem 1.5rem; }
+      body { padding: 16px; }
+      .summary { grid-template-columns: 1fr; }
+      .icon-button { width: 44px; height: 44px; }
+      .action-button { width: 100%; min-width: 0; }
+      .row-count strong { font-size: 1.6rem; }
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>🍺 Beer Counter</h1>
-    <div class="counter">
-      <div class="count" id="count">0</div>
-      <div class="label">piviek</div>
+    <div class="hero">
+      <h1>🍺 Beer Counter</h1>
+      <p class="subtitle">Pridávaj malé aj veľké pivá, vidíš ikonky, počty aj cenový súčet pre každý riadok.</p>
     </div>
-    <div class="btn-group">
-      <button class="btn-add" id="btnAdd">+ Pridať</button>
-      <button class="btn-sub" id="btnSub">− Odoberať</button>
-      <button class="btn-reset" id="btnReset">Reset</button>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="summary-label">Spolu pív</div>
+        <div class="summary-value" id="totalBottles">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Malé 0,3L</div>
+        <div class="summary-value" id="summarySmall">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Veľké 0,5L</div>
+        <div class="summary-value" id="summaryLarge">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Celková suma</div>
+        <div class="summary-value" id="grandTotal">0,00 €</div>
+      </div>
     </div>
-    <div class="stats">
-      <div class="stat"><div class="stat-value" id="statToday">0</div><div class="stat-label">Dnes</div></div>
-      <div class="stat"><div class="stat-value" id="statTotal">0</div><div class="stat-label">Celkom</div></div>
-      <div class="stat"><div class="stat-value" id="statSession">0</div><div class="stat-label">Táto relácia</div></div>
+
+    <div class="beer-list">
+      <div class="beer-row" data-size="large">
+        <div class="row-top">
+          <div class="beer-heading">
+            <div>
+              <div class="beer-name">Veľké pivo</div>
+              <div class="beer-meta">0,5L</div>
+            </div>
+            <div class="beer-price">
+              <span>Cena</span>
+              <input id="largePrice" type="text" inputmode="decimal" autocomplete="off">
+              <span class="currency">€</span>
+            </div>
+          </div>
+          <div class="row-controls">
+            <button class="icon-button btn-sub" type="button" data-action="decrease" data-size="large">−</button>
+            <div class="row-count"><strong id="largeCount">0</strong><span>ks</span></div>
+            <button class="icon-button btn-add" type="button" data-action="increase" data-size="large">+</button>
+          </div>
+        </div>
+        <div class="icon-row" id="largeIcons"></div>
+        <div class="row-total">
+          <span>Počet × cena</span>
+          <strong id="largeFormula">0 × 2,00 € = 0,00 €</strong>
+        </div>
+      </div>
+
+      <div class="beer-row" data-size="small">
+        <div class="row-top">
+          <div class="beer-heading">
+            <div>
+              <div class="beer-name">Malé pivo</div>
+              <div class="beer-meta">0,3L</div>
+            </div>
+            <div class="beer-price">
+              <span>Cena</span>
+              <input id="smallPrice" type="text" inputmode="decimal" autocomplete="off">
+              <span class="currency">€</span>
+            </div>
+          </div>
+          <div class="row-controls">
+            <button class="icon-button btn-sub" type="button" data-action="decrease" data-size="small">−</button>
+            <div class="row-count"><strong id="smallCount">0</strong><span>ks</span></div>
+            <button class="icon-button btn-add" type="button" data-action="increase" data-size="small">+</button>
+          </div>
+        </div>
+        <div class="icon-row" id="smallIcons"></div>
+        <div class="row-total">
+          <span>Počet × cena</span>
+          <strong id="smallFormula">0 × 1,50 € = 0,00 €</strong>
+        </div>
+      </div>
+    </div>
+
+    <div class="actions">
+      <button class="action-button btn-reset" id="btnReset" type="button">Reset počtov</button>
     </div>
   </div>
 
   <script>
-    const countEl = document.getElementById('count');
-    const btnAdd = document.getElementById('btnAdd');
-    const btnSub = document.getElementById('btnSub');
-    const btnReset = document.getElementById('btnReset');
-    const statToday = document.getElementById('statToday');
-    const statTotal = document.getElementById('statTotal');
-    const statSession = document.getElementById('statSession');
+    const totalBottlesEl = document.getElementById('totalBottles');
+    const summarySmallEl = document.getElementById('summarySmall');
+    const summaryLargeEl = document.getElementById('summaryLarge');
+    const grandTotalEl = document.getElementById('grandTotal');
+    const smallCountEl = document.getElementById('smallCount');
+    const largeCountEl = document.getElementById('largeCount');
+    const smallIconsEl = document.getElementById('smallIcons');
+    const largeIconsEl = document.getElementById('largeIcons');
+    const smallFormulaEl = document.getElementById('smallFormula');
+    const largeFormulaEl = document.getElementById('largeFormula');
+    const smallPriceInput = document.getElementById('smallPrice');
+    const largePriceInput = document.getElementById('largePrice');
+    const resetButton = document.getElementById('btnReset');
 
-    let count = parseInt(localStorage.getItem('beerCount') || '0', 10);
-    let todayKey = new Date().toISOString().split('T')[0];
-    let todayCount = parseInt(localStorage.getItem('beerToday_' + todayKey) || '0', 10);
-    let sessionCount = 0;
+    const STORAGE_KEYS = {
+      smallCount: 'beerSmallCount',
+      largeCount: 'beerLargeCount',
+      smallPrice: 'beerSmallPrice',
+      largePrice: 'beerLargePrice',
+      legacyCount: 'beerCount'
+    };
 
-    function render() {
-      countEl.textContent = count;
-      statToday.textContent = todayCount;
-      statTotal.textContent = count;
-      statSession.textContent = sessionCount;
-      countEl.classList.remove('bump');
-      void countEl.offsetWidth;
-      countEl.classList.add('bump');
+    function readInt(key, fallback) {
+      const value = parseInt(localStorage.getItem(key) || '', 10);
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function readFloat(key, fallback) {
+      const value = parseFloat(localStorage.getItem(key) || '');
+      return Number.isFinite(value) ? value : fallback;
+    }
+
+    function formatMoney(value) {
+      return value.toLocaleString('sk-SK', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      }) + ' €';
+    }
+
+    function formatInputMoney(value) {
+      return value.toLocaleString('sk-SK', {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+      });
+    }
+
+    function renderIcons(container, count) {
+      const icons = [];
+      const safeCount = Math.max(0, count);
+      for (let index = 0; index < safeCount; index++) {
+        icons.push('<span class="beer-icon" aria-hidden="true">🍺</span>');
+      }
+      container.innerHTML = icons.join('');
+    }
+
+    function getCount(size) {
+      return size === 'small' ? smallCount : largeCount;
+    }
+
+    function setCount(size, value) {
+      if (size === 'small') {
+        smallCount = Math.max(0, value);
+      } else {
+        largeCount = Math.max(0, value);
+      }
+    }
+
+    function getPrice(size) {
+      return size === 'small' ? smallPrice : largePrice;
+    }
+
+    function setPrice(size, value) {
+      const safeValue = Number.isFinite(value) && value >= 0 ? value : 0;
+      if (size === 'small') {
+        smallPrice = safeValue;
+      } else {
+        largePrice = safeValue;
+      }
+    }
+
+    function updateRow(size) {
+      const count = getCount(size);
+      const price = getPrice(size);
+      const total = count * price;
+      const countEl = size === 'small' ? smallCountEl : largeCountEl;
+      const iconsEl = size === 'small' ? smallIconsEl : largeIconsEl;
+      const formulaEl = size === 'small' ? smallFormulaEl : largeFormulaEl;
+
+      countEl.textContent = String(count);
+      renderIcons(iconsEl, count);
+      formulaEl.textContent = `${count} × ${formatMoney(price)} = ${formatMoney(total)}`;
     }
 
     function save() {
-      localStorage.setItem('beerCount', count.toString());
-      localStorage.setItem('beerToday_' + todayKey, todayCount.toString());
+      localStorage.setItem(STORAGE_KEYS.smallCount, String(smallCount));
+      localStorage.setItem(STORAGE_KEYS.largeCount, String(largeCount));
+      localStorage.setItem(STORAGE_KEYS.smallPrice, String(smallPrice));
+      localStorage.setItem(STORAGE_KEYS.largePrice, String(largePrice));
     }
 
-    btnAdd.addEventListener('click', () => { count++; todayCount++; sessionCount++; save(); render(); });
-    btnSub.addEventListener('click', () => { if (count > 0) { count--; if (todayCount > 0) todayCount--; if (sessionCount > 0) sessionCount--; save(); render(); } });
-    btnReset.addEventListener('click', () => { if (confirm('Naozaj chceš resetovať všetky počítadlá?')) { count = 0; todayCount = 0; sessionCount = 0; save(); render(); } });
+    function render() {
+      const totalCount = smallCount + largeCount;
+      const totalValue = (smallCount * smallPrice) + (largeCount * largePrice);
 
-    // Check if day changed
-    const savedDay = localStorage.getItem('beerDay');
-    if (savedDay !== todayKey) {
-      localStorage.setItem('beerDay', todayKey);
-      todayCount = 0;
-      localStorage.setItem('beerToday_' + todayKey, '0');
+      updateRow('small');
+      updateRow('large');
+
+      totalBottlesEl.textContent = String(totalCount);
+      summarySmallEl.textContent = String(smallCount);
+      summaryLargeEl.textContent = String(largeCount);
+      grandTotalEl.textContent = formatMoney(totalValue);
+
+      smallPriceInput.value = formatInputMoney(smallPrice);
+      largePriceInput.value = formatInputMoney(largePrice);
     }
+
+    function changeCount(size, delta) {
+      const nextValue = getCount(size) + delta;
+      setCount(size, nextValue);
+      save();
+      render();
+    }
+
+    function attachPriceInput(input, size) {
+      input.addEventListener('change', () => {
+        const parsed = parseFloat(String(input.value).replace(',', '.'));
+        setPrice(size, parsed);
+        save();
+        render();
+      });
+      input.addEventListener('blur', () => {
+        input.value = formatInputMoney(getPrice(size));
+      });
+    }
+
+    let smallCount = readInt(STORAGE_KEYS.smallCount, 0);
+    let largeCount = readInt(STORAGE_KEYS.largeCount, 0);
+    let smallPrice = readFloat(STORAGE_KEYS.smallPrice, 1.50);
+    let largePrice = readFloat(STORAGE_KEYS.largePrice, 2.00);
+
+    if (!localStorage.getItem(STORAGE_KEYS.smallCount) && !localStorage.getItem(STORAGE_KEYS.largeCount)) {
+      const legacyCount = readInt(STORAGE_KEYS.legacyCount, 0);
+      if (legacyCount > 0) {
+        smallCount = legacyCount;
+      }
+    }
+
+    document.querySelectorAll('[data-action]').forEach((button) => {
+      button.addEventListener('click', () => {
+        const action = button.getAttribute('data-action');
+        const size = button.getAttribute('data-size');
+        changeCount(size, action === 'increase' ? 1 : -1);
+      });
+    });
+
+    attachPriceInput(smallPriceInput, 'small');
+    attachPriceInput(largePriceInput, 'large');
+
+    resetButton.addEventListener('click', () => {
+      if (confirm('Naozaj chceš resetovať všetky počty pív?')) {
+        smallCount = 0;
+        largeCount = 0;
+        save();
+        render();
+      }
+    });
 
     render();
   </script>
