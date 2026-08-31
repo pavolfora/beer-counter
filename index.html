@@ -40,6 +40,14 @@
       text-shadow: 0 8px 30px rgba(255, 183, 3, 0.2);
     }
     .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 0.98rem; }
+    .session-date {
+      margin: 8px 0 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.03em;
+      min-height: 1.4em;
+    }
     .summary {
       display: grid;
       grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -221,6 +229,7 @@
     <div class="hero">
       <h1>🍺 Beer Counter</h1>
       <p class="subtitle">Pridávaj malé aj veľké pivá, vidíš ikonky, počty aj cenový súčet pre každý riadok.</p>
+      <p class="session-date" id="sessionDate"></p>
     </div>
 
     <div class="summary">
@@ -316,8 +325,37 @@
       largeCount: 'beerLargeCount',
       smallPrice: 'beerSmallPrice',
       largePrice: 'beerLargePrice',
-      legacyCount: 'beerCount'
+      legacyCount: 'beerCount',
+      sessionDate: 'beerSessionDate'
     };
+
+    function formatSessionDate(isoDate) {
+      const date = new Date(isoDate);
+      return date.toLocaleDateString('sk-SK', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    function renderSessionDate() {
+      const sessionDateEl = document.getElementById('sessionDate');
+      const stored = localStorage.getItem(STORAGE_KEYS.sessionDate);
+      if (stored) {
+        sessionDateEl.textContent = formatSessionDate(stored);
+      } else {
+        sessionDateEl.textContent = '';
+      }
+    }
+
+    function ensureSessionDate() {
+      if (!localStorage.getItem(STORAGE_KEYS.sessionDate)) {
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(STORAGE_KEYS.sessionDate, today);
+        renderSessionDate();
+      }
+    }
 
     function readInt(key, fallback) {
       const value = parseInt(localStorage.getItem(key) || '', 10);
@@ -414,6 +452,7 @@
     function changeCount(size, delta) {
       const nextValue = getCount(size) + delta;
       setCount(size, nextValue);
+      if (delta > 0) ensureSessionDate();
       save();
       render();
     }
@@ -457,12 +496,14 @@
       if (confirm('Naozaj chceš resetovať všetky počty pív?')) {
         smallCount = 0;
         largeCount = 0;
+        localStorage.removeItem(STORAGE_KEYS.sessionDate);
+        renderSessionDate();
         save();
         render();
       }
     });
 
     render();
-  </script>
+    renderSessionDate();
 </body>
 </html>
