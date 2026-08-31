@@ -42,7 +42,7 @@
     .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 0.98rem; }
     .summary {
       display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
+      grid-template-columns: repeat(3, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -225,10 +225,6 @@
 
     <div class="summary">
       <div class="summary-card">
-        <div class="summary-label">Spolu pív</div>
-        <div class="summary-value" id="totalBottles">0</div>
-      </div>
-      <div class="summary-card">
         <div class="summary-label">Malé 0,3L</div>
         <div class="summary-value" id="summarySmall">0</div>
       </div>
@@ -302,7 +298,6 @@
   </div>
 
   <script>
-    const totalBottlesEl = document.getElementById('totalBottles');
     const summarySmallEl = document.getElementById('summarySmall');
     const summaryLargeEl = document.getElementById('summaryLarge');
     const grandTotalEl = document.getElementById('grandTotal');
@@ -403,13 +398,11 @@
     }
 
     function render() {
-      const totalCount = smallCount + largeCount;
       const totalValue = (smallCount * smallPrice) + (largeCount * largePrice);
 
       updateRow('small');
       updateRow('large');
 
-      totalBottlesEl.textContent = String(totalCount);
       summarySmallEl.textContent = String(smallCount);
       summaryLargeEl.textContent = String(largeCount);
       grandTotalEl.textContent = formatMoney(totalValue);
