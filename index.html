@@ -212,6 +212,72 @@
       justify-content: center;
       padding: 16px;
     }
+    .round-section {
+      margin-bottom: 18px;
+    }
+    .round-section h2 {
+      margin: 0 0 14px;
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--muted);
+      text-align: center;
+    }
+    .round-controls {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+    .round-controls select {
+      padding: 0.9rem 1.25rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(5, 10, 22, 0.55);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+      min-width: 140px;
+    }
+    .round-controls select:focus {
+      border-color: rgba(255, 183, 3, 0.55);
+      box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.12);
+    }
+    .btn-round {
+      background: linear-gradient(135deg, #2d6b3f, #1f4d2e);
+      color: #d4f5d4;
+    }
+    .round-history {
+      display: grid;
+      gap: 8px;
+    }
+    .round-entry {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px 16px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      backdrop-filter: blur(14px);
+      font-size: 0.95rem;
+    }
+    .round-entry .name {
+      font-weight: 700;
+      color: var(--accent);
+    }
+    .round-entry .time {
+      color: var(--muted);
+      font-size: 0.82rem;
+    }
+    .round-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 24px;
+      font-style: italic;
+    }
     @media (max-width: 760px) {
       .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
       .row-top { align-items: flex-start; }
@@ -302,8 +368,24 @@
       </div>
     </div>
 
+    <div class="round-section">
+      <h2>🍻 Kto platil kolo</h2>
+      <div class="round-controls">
+        <select id="roundName">
+          <option value="Ja">Ja</option>
+          <option value="Orech">Orech</option>
+          <option value="Saso">Saso</option>
+          <option value="Rišo">Rišo</option>
+          <option value="Spider">Spider</option>
+          <option value="Peťo K.">Peťo K.</option>
+        </select>
+        <button class="action-button btn-round" id="btnRound" type="button">🍻 Platil kolo</button>
+      </div>
+      <div class="round-history" id="roundHistory"></div>
+    </div>
+
     <div class="actions">
-      <button class="action-button btn-reset" id="btnReset" type="button">Reset počtov</button>
+      <button class="action-button btn-reset" id="btnReset" type="button">Reset všetkého</button>
     </div>
   </div>
 
@@ -327,7 +409,8 @@
       smallPrice: 'beerSmallPrice',
       largePrice: 'beerLargePrice',
       legacyCount: 'beerCount',
-      sessionDate: 'beerSessionDate'
+      sessionDate: 'beerSessionDate',
+      roundHistory: 'beerRoundHistory'
     };
 
     function formatSessionDate(isoDate) {
@@ -494,16 +577,74 @@
     attachPriceInput(largePriceInput, 'large');
 
     resetButton.addEventListener('click', () => {
-      if (confirm('Naozaj chceš resetovať všetky počty pív?')) {
+      if (confirm('Naozaj chceš resetovať všetky počty pív aj kolá?')) {
         smallCount = 0;
         largeCount = 0;
+        roundHistory = [];
+        localStorage.removeItem(STORAGE_KEYS.roundHistory);
         localStorage.removeItem(STORAGE_KEYS.sessionDate);
         renderSessionDate();
         save();
         render();
+        renderRoundHistory();
       }
     });
 
+    const btnRound = document.getElementById('btnRound');
+    const roundHistoryEl = document.getElementById('roundHistory');
+    let roundHistory = [];
+
+    function loadRoundHistory() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.roundHistory);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            roundHistory = parsed;
+          }
+        }
+      } catch (e) {
+        roundHistory = [];
+      }
+    }
+
+    function saveRoundHistory() {
+      localStorage.setItem(STORAGE_KEYS.roundHistory, JSON.stringify(roundHistory));
+    }
+
+    function formatRoundTime(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString('sk-SK', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function renderRoundHistory() {
+      if (roundHistory.length === 0) {
+        roundHistoryEl.innerHTML = '<div class="round-empty">Zatiaľ nik neplatil kolo 🍺</div>';
+        return;
+      }
+      const items = roundHistory.slice().reverse().map(entry => {
+        return `<div class="round-entry">
+          <span class="name">🍻 ${entry.name}</span>
+          <span class="time">${formatRoundTime(entry.time)}</span>
+        </div>`;
+      });
+      roundHistoryEl.innerHTML = items.join('');
+    }
+
+    btnRound.addEventListener('click', () => {
+      const name = document.getElementById('roundName').value;
+      roundHistory.push({ name, time: new Date().toISOString() });
+      saveRoundHistory();
+      renderRoundHistory();
+    });
+
+    loadRoundHistory();
+    renderRoundHistory();
     render();
     renderSessionDate();
   </script>
