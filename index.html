@@ -613,7 +613,7 @@
 
     function renderRoundHistory() {
       if (roundHistory.length === 0) {
-        roundHistoryEl.innerHTML = '<div class="round-empty">Zatiaľ nik neplatil kolo 🍺</div>';
+        roundHistoryEl.innerHTML = '<div class="round-empty">Zatiaľ nikto neplatil kolo 🍺</div>';
         return;
       }
       const items = roundHistory.slice().reverse().map(entry => {
