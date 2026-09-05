@@ -33,14 +33,6 @@
     }
     .container { width: min(100%, 860px); }
     .hero { text-align: center; margin-bottom: 20px; }
-    h1 {
-      margin: 0;
-      font-size: clamp(0.75rem, 1.6vw, 1rem);
-      letter-spacing: 0.02em;
-      font-weight: 400;
-      color: var(--muted);
-      text-shadow: none;
-    }
     .subtitle { margin: 10px 0 0; color: var(--muted); font-size: 0.98rem; }
     .session-date {
       margin: 8px 0 0;
@@ -214,13 +206,12 @@
     }
     .round-section {
       margin-bottom: 18px;
-    }
-    .round-section h2 {
-      margin: 0 0 14px;
-      font-size: 1.1rem;
-      font-weight: 700;
-      color: var(--muted);
-      text-align: center;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+      padding: 18px;
     }
     .round-controls {
       display: flex;
@@ -239,6 +230,7 @@
       outline: none;
       cursor: pointer;
       min-width: 140px;
+      flex: 1;
     }
     .round-controls select:focus {
       border-color: rgba(255, 183, 3, 0.55);
@@ -250,17 +242,16 @@
     }
     .round-history {
       display: grid;
-      gap: 8px;
+      gap: 6px;
     }
     .round-entry {
       display: flex;
       justify-content: space-between;
       align-items: center;
-      padding: 12px 16px;
-      background: var(--panel);
-      border: 1px solid var(--border);
+      padding: 10px 14px;
       border-radius: 14px;
-      backdrop-filter: blur(14px);
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       font-size: 0.95rem;
     }
     .round-entry .name {
@@ -295,7 +286,6 @@
 <body>
   <div class="container">
     <div class="hero">
-      <h1>🍺 Beer Counter</h1>
       <p class="session-date" id="sessionDate"></p>
     </div>
 
@@ -369,7 +359,6 @@
     </div>
 
     <div class="round-section">
-      <h2>🍻 Kto platil kolo</h2>
       <div class="round-controls">
         <select id="roundName">
           <option value="Ja">Ja</option>
