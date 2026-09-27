@@ -46,7 +46,7 @@
     }
     .summary {
       display: grid;
-      grid-template-columns: repeat(3, minmax(0, 1fr));
+      grid-template-columns: repeat(4, minmax(0, 1fr));
       gap: 14px;
       margin-bottom: 18px;
     }
@@ -297,6 +297,10 @@
         <div class="summary-value" id="summaryTotal">0</div>
       </div>
       <div class="summary-card">
+        <div class="summary-label">Celkovo si vypil</div>
+        <div class="summary-value" id="summaryConsumed">0</div>
+      </div>
+      <div class="summary-card">
         <div class="summary-label">Zaplatím ja</div>
         <div class="summary-value me" id="summaryMe">0</div>
       </div>
@@ -343,6 +347,7 @@
   <script>
     const sessionDateEl = document.getElementById('sessionDate');
     const summaryTotalEl = document.getElementById('summaryTotal');
+    const summaryConsumedEl = document.getElementById('summaryConsumed');
     const summaryMeEl = document.getElementById('summaryMe');
     const summaryOtherEl = document.getElementById('summaryOther');
     const counterValueEl = document.getElementById('counterValue');
@@ -421,6 +426,12 @@
 
     function render() {
       const total = beerEntries.reduce((sum, entry) => sum + getEntryCount(entry), 0);
+      const consumedCount = beerEntries.reduce((sum, entry) => {
+        if (entry.who === 'other') {
+          return sum + getEntryCount(entry);
+        }
+        return sum + 1;
+      }, 0);
       const meCount = beerEntries
         .filter(entry => entry.who === 'me')
         .reduce((sum, entry) => sum + getEntryCount(entry), 0);
@@ -429,6 +440,7 @@
         .reduce((sum, entry) => sum + getEntryCount(entry), 0);
 
       summaryTotalEl.textContent = String(total);
+      summaryConsumedEl.textContent = String(consumedCount);
       summaryMeEl.textContent = String(meCount);
       summaryOtherEl.textContent = String(otherCount);
 
