@@ -430,7 +430,10 @@
         if (entry.who === 'other') {
           return sum + getEntryCount(entry);
         }
-        return sum + 1;
+        if (entry.who === 'me') {
+          return sum + 1;
+        }
+        return sum;
       }, 0);
       const meCount = beerEntries
         .filter(entry => entry.who === 'me')
