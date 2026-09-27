@@ -388,14 +388,17 @@
       }
     }
 
-    function formatDateTime(isoString) {
+    function formatTime(isoString) {
       const date = new Date(isoString);
-      return date.toLocaleString('sk-SK', {
-        day: 'numeric',
-        month: 'short',
+      return date.toLocaleTimeString('sk-SK', {
         hour: '2-digit',
         minute: '2-digit'
       });
+    }
+
+    function getEntryCount(entry) {
+      const value = parseInt(entry && entry.count, 10);
+      return Number.isFinite(value) && value > 0 ? value : 1;
     }
 
     function loadEntries() {
@@ -417,9 +420,13 @@
     }
 
     function render() {
-      const total = beerEntries.length;
-      const meCount = beerEntries.filter(e => e.who === 'me').length;
-      const otherCount = beerEntries.filter(e => e.who === 'other').length;
+      const total = beerEntries.reduce((sum, entry) => sum + getEntryCount(entry), 0);
+      const meCount = beerEntries
+        .filter(entry => entry.who === 'me')
+        .reduce((sum, entry) => sum + getEntryCount(entry), 0);
+      const otherCount = beerEntries
+        .filter(entry => entry.who === 'other')
+        .reduce((sum, entry) => sum + getEntryCount(entry), 0);
 
       summaryTotalEl.textContent = String(total);
       summaryMeEl.textContent = String(meCount);
@@ -437,9 +444,9 @@
         const whoText = entry.who === 'me' ? 'Ja' : 'Iný';
         const originalIndex = beerEntries.length - 1 - index;
         return `<div class="history-entry ${whoClass}">
-          <span class="entry-count">${entry.count}×</span>
+          <span class="entry-count">${getEntryCount(entry)}×</span>
           <span class="entry-who ${whoClass}">${whoText}</span>
-          <span class="entry-time">${formatDateTime(entry.time)}</span>
+          <span class="entry-time">${formatTime(entry.time)}</span>
           <button class="btn-delete" type="button" data-index="${originalIndex}" title="Odstrániť">🗑️</button>
         </div>`;
       });
@@ -447,6 +454,9 @@
     }
 
     function deleteEntry(index) {
+      if (index < 0 || index >= beerEntries.length) {
+        return;
+      }
       beerEntries.splice(index, 1);
       saveEntries();
       render();
@@ -459,15 +469,11 @@
 
     function addBeers() {
       const who = whoSelectEl.value;
-      const now = new Date().toISOString();
-
-      for (let i = 0; i < pendingCount; i++) {
-        beerEntries.push({
-          count: 1,
-          who: who,
-          time: now
-        });
-      }
+      beerEntries.push({
+        count: pendingCount,
+        who: who,
+        time: new Date().toISOString()
+      });
 
       ensureSessionDate();
       saveEntries();
