@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="sk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Beer Counter 🍺</title>
+  <style>
+    :root {
+      color-scheme: dark;
+      --bg-1: #0b1020;
+      --bg-2: #121a33;
+      --panel: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 195, 0, 0.22);
+      --text: #f5f7ff;
+      --muted: #aab1c7;
+      --accent: #ffb703;
+      --accent-2: #fb8500;
+      --me-color: #4ade80;
+      --other-color: #f87171;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: system-ui, sans-serif;
+      background:
+        radial-gradient(circle at top left, rgba(255, 183, 3, 0.18), transparent 30%),
+        radial-gradient(circle at top right, rgba(251, 133, 0, 0.12), transparent 28%),
+        linear-gradient(135deg, var(--bg-1), var(--bg-2));
+      color: var(--text);
+      padding: 24px 24px 24px;
+      padding-top: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .container { width: min(100%, 860px); }
+    .hero { text-align: center; margin-bottom: 20px; }
+    .session-date {
+      margin: 8px 0 0;
+      font-size: 1.05rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: 0.03em;
+      min-height: 1.4em;
+    }
+    .summary {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+      margin-bottom: 18px;
+    }
+    .summary-card, .input-section, .history-section, .actions {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 18px 40px rgba(0, 0, 0, 0.24);
+    }
+    .summary-card { padding: 18px; text-align: center; }
+    .summary-label {
+      color: var(--muted);
+      font-size: 0.82rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+    }
+    .summary-value {
+      margin-top: 8px;
+      font-size: clamp(1.4rem, 3vw, 2rem);
+      font-weight: 800;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .summary-value.me { color: var(--me-color); }
+    .summary-value.other { color: var(--other-color); }
+
+    .input-section {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .input-section h2 {
+      margin: 0 0 16px;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .input-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: flex-end;
+    }
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      flex: 1;
+      min-width: 140px;
+    }
+    .input-group label {
+      color: var(--muted);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+    .counter-group {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .counter-group .icon-button {
+      width: 48px;
+      height: 48px;
+      font-size: 1.5rem;
+    }
+    .counter-value {
+      min-width: 60px;
+      text-align: center;
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      font-variant-numeric: tabular-nums;
+    }
+    .select-wrapper {
+      position: relative;
+    }
+    .select-wrapper select {
+      width: 100%;
+      padding: 0.9rem 1.25rem;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: rgba(5, 10, 22, 0.55);
+      color: var(--text);
+      font-size: 1rem;
+      outline: none;
+      cursor: pointer;
+      appearance: none;
+      padding-right: 40px;
+    }
+    .select-wrapper select:focus {
+      border-color: rgba(255, 183, 3, 0.55);
+      box-shadow: 0 0 0 3px rgba(255, 183, 3, 0.12);
+    }
+    .select-wrapper::after {
+      content: '▼';
+      position: absolute;
+      right: 14px;
+      top: 50%;
+      transform: translateY(-50%);
+      pointer-events: none;
+      color: var(--muted);
+      font-size: 0.7rem;
+    }
+    .btn-add-beer {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #1b1400;
+      min-width: 140px;
+      padding: 1rem 1.5rem;
+      font-size: 1rem;
+    }
+    .btn-add-beer:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .btn-add-beer:active { transform: scale(0.96); }
+
+    .history-section {
+      padding: 20px;
+      margin-bottom: 18px;
+    }
+    .history-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .history-header h2 {
+      margin: 0;
+      font-size: 1.1rem;
+      font-weight: 600;
+    }
+    .history-list {
+      display: grid;
+      gap: 8px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+    .history-entry {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      font-size: 0.95rem;
+    }
+    .history-entry.me { border-left: 4px solid var(--me-color); }
+    .history-entry.other { border-left: 4px solid var(--other-color); }
+    .entry-count {
+      min-width: 48px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 1.1rem;
+      color: var(--accent);
+    }
+    .entry-who {
+      font-weight: 700;
+      text-transform: capitalize;
+    }
+    .entry-who.me { color: var(--me-color); }
+    .entry-who.other { color: var(--other-color); }
+    .entry-time {
+      color: var(--muted);
+      font-size: 0.82rem;
+      margin-left: auto;
+    }
+    .btn-delete {
+      border: none;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.06);
+      color: var(--muted);
+      border-radius: 10px;
+      padding: 6px 10px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      transition: background 0.15s ease, color 0.15s ease, transform 0.15s ease;
+    }
+    .btn-delete:hover {
+      background: rgba(248, 113, 113, 0.2);
+      color: #ffd1d1;
+      transform: scale(1.05);
+    }
+    .btn-delete:active { transform: scale(0.95); }
+    .history-empty {
+      text-align: center;
+      color: var(--muted);
+      font-size: 0.9rem;
+      padding: 32px;
+      font-style: italic;
+    }
+
+    .actions {
+      display: flex;
+      gap: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      padding: 16px;
+    }
+    .icon-button, .action-button {
+      border: none;
+      cursor: pointer;
+      border-radius: 16px;
+      font-weight: 800;
+      transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+    }
+    .icon-button {
+      width: 48px;
+      height: 48px;
+      font-size: 1.5rem;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.08));
+      color: var(--text);
+      box-shadow: 0 8px 18px rgba(0, 0, 0, 0.25);
+    }
+    .action-button {
+      min-width: 150px;
+      padding: 1rem 1.25rem;
+      font-size: 1rem;
+      box-shadow: 0 10px 24px rgba(0, 0, 0, 0.28);
+    }
+    .icon-button:hover, .action-button:hover { transform: translateY(-1px); filter: brightness(1.05); }
+    .icon-button:active, .action-button:active { transform: scale(0.96); }
+    .btn-reset { background: linear-gradient(135deg, #642d2d, #4d2020); color: #ffd1d1; }
+
+    @media (max-width: 760px) {
+      .summary { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .input-row { flex-direction: column; align-items: stretch; }
+      .input-group { width: 100%; }
+      .counter-group { justify-content: center; }
+      .btn-add-beer { width: 100%; }
+    }
+    @media (max-width: 480px) {
+      body { padding: 16px; }
+      .summary { grid-template-columns: 1fr; }
+      .icon-button { width: 44px; height: 44px; }
+      .action-button { width: 100%; min-width: 0; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="hero">
+      <p class="session-date" id="sessionDate"></p>
+    </div>
+
+    <div class="summary">
+      <div class="summary-card">
+        <div class="summary-label">Celkom piv</div>
+        <div class="summary-value" id="summaryTotal">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Zaplatím ja</div>
+        <div class="summary-value me" id="summaryMe">0</div>
+      </div>
+      <div class="summary-card">
+        <div class="summary-label">Zaplatí iný</div>
+        <div class="summary-value other" id="summaryOther">0</div>
+      </div>
+    </div>
+
+    <div class="input-section">
+      <h2>Pridať veľké pivo (0,5L)</h2>
+      <div class="input-row">
+        <div class="input-group">
+          <label>Počet</label>
+          <div class="counter-group">
+            <button class="icon-button btn-sub" id="btnDecrease" type="button">−</button>
+            <span class="counter-value" id="counterValue">1</span>
+            <button class="icon-button btn-add" id="btnIncrease" type="button">+</button>
+          </div>
+        </div>
+        <div class="input-group select-wrapper">
+          <label>Kto bral</label>
+          <select id="whoSelect">
+            <option value="me">Ja</option>
+            <option value="other">Iný</option>
+          </select>
+        </div>
+        <button class="action-button btn-add-beer" id="btnAddBeer" type="button">Pridať</button>
+      </div>
+    </div>
+
+    <div class="history-section">
+      <div class="history-header">
+        <h2>História</h2>
+      </div>
+      <div class="history-list" id="historyList"></div>
+    </div>
+
+    <div class="actions">
+      <button class="action-button btn-reset" id="btnReset" type="button">Reset všetkého</button>
+    </div>
+  </div>
+
+  <script>
+    const sessionDateEl = document.getElementById('sessionDate');
+    const summaryTotalEl = document.getElementById('summaryTotal');
+    const summaryMeEl = document.getElementById('summaryMe');
+    const summaryOtherEl = document.getElementById('summaryOther');
+    const counterValueEl = document.getElementById('counterValue');
+    const whoSelectEl = document.getElementById('whoSelect');
+    const historyListEl = document.getElementById('historyList');
+    const btnDecrease = document.getElementById('btnDecrease');
+    const btnIncrease = document.getElementById('btnIncrease');
+    const btnAddBeer = document.getElementById('btnAddBeer');
+    const btnReset = document.getElementById('btnReset');
+
+    const STORAGE_KEYS = {
+      beers: 'beerEntries',
+      sessionDate: 'beerSessionDate'
+    };
+
+    let beerEntries = [];
+    let pendingCount = 1;
+
+    function formatSessionDate(isoDate) {
+      const date = new Date(isoDate);
+      return date.toLocaleDateString('sk-SK', {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric'
+      });
+    }
+
+    function renderSessionDate() {
+      const stored = localStorage.getItem(STORAGE_KEYS.sessionDate);
+      if (stored) {
+        sessionDateEl.textContent = formatSessionDate(stored);
+      } else {
+        sessionDateEl.textContent = '';
+      }
+    }
+
+    function ensureSessionDate() {
+      if (!localStorage.getItem(STORAGE_KEYS.sessionDate)) {
+        const today = new Date().toISOString().slice(0, 10);
+        localStorage.setItem(STORAGE_KEYS.sessionDate, today);
+        renderSessionDate();
+      }
+    }
+
+    function formatDateTime(isoString) {
+      const date = new Date(isoString);
+      return date.toLocaleString('sk-SK', {
+        day: 'numeric',
+        month: 'short',
+        hour: '2-digit',
+        minute: '2-digit'
+      });
+    }
+
+    function loadEntries() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEYS.beers);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          if (Array.isArray(parsed)) {
+            beerEntries = parsed;
+          }
+        }
+      } catch (e) {
+        beerEntries = [];
+      }
+    }
+
+    function saveEntries() {
+      localStorage.setItem(STORAGE_KEYS.beers, JSON.stringify(beerEntries));
+    }
+
+    function render() {
+      const total = beerEntries.length;
+      const meCount = beerEntries.filter(e => e.who === 'me').length;
+      const otherCount = beerEntries.filter(e => e.who === 'other').length;
+
+      summaryTotalEl.textContent = String(total);
+      summaryMeEl.textContent = String(meCount);
+      summaryOtherEl.textContent = String(otherCount);
+
+      counterValueEl.textContent = String(pendingCount);
+
+      if (beerEntries.length === 0) {
+        historyListEl.innerHTML = '<div class="history-empty">Zatiaľ žiadne pivá 🍺</div>';
+        return;
+      }
+
+      const items = [...beerEntries].reverse().map((entry, index) => {
+        const whoClass = entry.who === 'me' ? 'me' : 'other';
+        const whoText = entry.who === 'me' ? 'Ja' : 'Iný';
+        const originalIndex = beerEntries.length - 1 - index;
+        return `<div class="history-entry ${whoClass}">
+          <span class="entry-count">${entry.count}×</span>
+          <span class="entry-who ${whoClass}">${whoText}</span>
+          <span class="entry-time">${formatDateTime(entry.time)}</span>
+          <button class="btn-delete" type="button" data-index="${originalIndex}" title="Odstrániť">🗑️</button>
+        </div>`;
+      });
+      historyListEl.innerHTML = items.join('');
+    }
+
+    function deleteEntry(index) {
+      beerEntries.splice(index, 1);
+      saveEntries();
+      render();
+    }
+
+    function updatePendingCount(delta) {
+      pendingCount = Math.max(1, pendingCount + delta);
+      counterValueEl.textContent = String(pendingCount);
+    }
+
+    function addBeers() {
+      const who = whoSelectEl.value;
+      const now = new Date().toISOString();
+
+      for (let i = 0; i < pendingCount; i++) {
+        beerEntries.push({
+          count: 1,
+          who: who,
+          time: now
+        });
+      }
+
+      ensureSessionDate();
+      saveEntries();
+      render();
+    }
+
+    function resetAll() {
+      if (confirm('Naozaj chceš resetovať všetky záznamy?')) {
+        beerEntries = [];
+        pendingCount = 1;
+        localStorage.removeItem(STORAGE_KEYS.beers);
+        localStorage.removeItem(STORAGE_KEYS.sessionDate);
+        renderSessionDate();
+        render();
+      }
+    }
+
+    btnDecrease.addEventListener('click', () => updatePendingCount(-1));
+    btnIncrease.addEventListener('click', () => updatePendingCount(1));
+    btnAddBeer.addEventListener('click', addBeers);
+    btnReset.addEventListener('click', resetAll);
+
+    historyListEl.addEventListener('click', (event) => {
+      const button = event.target.closest('.btn-delete');
+      if (button) {
+        deleteEntry(parseInt(button.getAttribute('data-index'), 10));
+      }
+    });
+
+    loadEntries();
+    render();
+    renderSessionDate();
+  </script>
+</body>
+</html>
